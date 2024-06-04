@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
-import { ROLES } from "~/lib/constants"
+import { ROLES } from "@artists-together/core/discord"
 import { registerEventHandler } from "~/lib/core"
-import { cron, getGuild } from "~/lib/helpers"
+import { cron, getGuild } from "~/lib/utils"
 
 dayjs.extend(isSameOrAfter)
 
@@ -39,11 +39,11 @@ registerEventHandler("ready", (client) => {
             "\n" +
             "To mitigate inactivity we have to kick you from the server, but you’re free to join again whenever you want!" +
             "\n" +
-            "https://discord.gg/9Ayh9dvhHe",
+            "https://discord.gg/9Ayh9dvhHe"
         )
         .catch((error) => {
           console.log(
-            `[kick-guests] error sending dm to guest: ${member.user.username}`,
+            `[kick-guests] error sending dm to guest: ${member.user.username}`
           )
           console.error(error)
         })

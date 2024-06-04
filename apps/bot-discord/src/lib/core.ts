@@ -1,3 +1,4 @@
+import { Glob } from "bun"
 import type {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -7,8 +8,6 @@ import type {
   SlashCommandBuilder,
   UserContextMenuCommandInteraction,
 } from "discord.js"
-
-import glob from "fast-glob"
 
 type RegisterEventCallback<T extends keyof ClientEvents> = (
   ...args: ClientEvents[T]
@@ -21,7 +20,7 @@ const handlersMap = new Map<
 
 export function registerEventHandler<T extends keyof ClientEvents>(
   event: T,
-  callback: RegisterEventCallback<T>,
+  callback: RegisterEventCallback<T>
 ) {
   const set = handlersMap.get(event) ?? new Set<RegisterEventCallback<T>>()
   set.add(callback)
@@ -38,8 +37,8 @@ const buildersMap = new Map<string, CommandBuilderStub>()
 export function registerSlashCommand<T extends CommandBuilderStub>(
   builder: T,
   callback: (
-    interaction: AutocompleteInteraction | ChatInputCommandInteraction,
-  ) => void,
+    interaction: AutocompleteInteraction | ChatInputCommandInteraction
+  ) => void
 ) {
   if (buildersMap.has(builder.name)) {
     throw Error(`Found duplicated command: ${builder.name}`)
@@ -65,8 +64,8 @@ export function registerContextMenuCommand<T extends ContextMenuCommandBuilder>(
   callback: (
     interaction:
       | MessageContextMenuCommandInteraction
-      | UserContextMenuCommandInteraction,
-  ) => void,
+      | UserContextMenuCommandInteraction
+  ) => void
 ) {
   if (buildersMap.has(builder.name)) {
     throw Error(`Found duplicated command: ${builder.name}`)
@@ -83,13 +82,12 @@ export function registerContextMenuCommand<T extends ContextMenuCommandBuilder>(
 }
 
 export async function getRegistrations() {
-  const files = await glob("src/app/**/*.ts")
-  const imports = files.map(
-    (file) => import(`../app/${file.replace("src/app", "")}`),
-  )
+  const files = new Glob("src/app/**/*.ts").scan(".")
 
-  // Let side-effects run
-  await Promise.all(imports)
+  for await (const file of files) {
+    // Let side-effects run
+    await import(file)
+  }
 
   return {
     handlers: handlersMap,

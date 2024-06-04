@@ -1,14 +1,11 @@
 {
+  "extends": "@artists-together/ts/base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
-    "baseUrl": "./",
-    "noEmit": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
+    "rootDir": "."
   }
 }

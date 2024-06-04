@@ -1,5 +1,5 @@
 import { registerEventHandler } from "~/lib/core"
-import { ROLES } from "~/lib/constants"
+import { ROLES } from "@artists-together/core/discord"
 
 registerEventHandler("guildMemberAdd", async (member) => {
   console.log(`[guest-role] adding role to new member ${member.user.username}`)

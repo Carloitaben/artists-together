@@ -1,138 +1,134 @@
-import { WebSocket, WebSocketServer } from "ws"
-import { ClientEvent, ClientEventDataMap, Cursor, ServerEvent, ServerEventDataMap } from "ws-types"
-import { nanoid } from "nanoid"
-import express from "express"
-import helmet from "helmet"
-import http from "http"
-import cors from "cors"
+import type { ServerWebSocket } from "bun"
+import { unreachable } from "@artists-together/core/utils"
+import { authenticate } from "@artists-together/auth"
+import type { AuthenticateResult } from "@artists-together/auth"
+import type { Cursor, ServerEventData } from "@artists-together/core/ws"
+import {
+  packServerMessage,
+  unpackClientMessage,
+} from "@artists-together/core/ws"
 
-type ExtendedWebSocket = WebSocket & {
-  id: string
-  room: string | null
-  cursor: Cursor | null
-  isAlive: boolean
+type WebSocketData = {
+  room?: string
+  auth: AuthenticateResult
+  cursor: Cursor
 }
 
-function send<T extends ServerEvent>(ws: ExtendedWebSocket, event: T, data: ServerEventDataMap[T]) {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify([event, data]))
+const connections = new Set<ServerWebSocket<WebSocketData>>()
+
+function update(ws: ServerWebSocket<WebSocketData>) {
+  connections.delete(ws)
+  connections.add(ws)
 }
 
-const rooms = new Map<string, Set<ExtendedWebSocket>>()
-const wss = new WebSocketServer<ExtendedWebSocket>({ noServer: true })
+function getRoomState(room: string) {
+  return Array.from(connections).reduce<ServerEventData<"room:update">>(
+    (state, ws) => {
+      if (ws.data.room !== room) return state
 
-const pingInterval = setInterval(() => {
-  wss.clients.forEach((ws) => {
-    if (!ws.isAlive) return ws.terminate()
-    ws.isAlive = false
-    ws.ping()
-  })
-}, 30000)
+      ++state.count
 
-wss.on("connection", (ws) => {
-  ws.id = nanoid()
-  ws.isAlive = true
-  ws.room = null
-  ws.cursor = null
+      if (ws.data.auth) {
+        state.members.push({
+          cursor: ws.data.cursor,
+          username: ws.data.auth.user.username,
+        })
+      }
 
-  ws.on("error", console.error)
+      return state
+    },
+    { count: 0, members: [] }
+  )
+}
 
-  ws.on("pong", () => {
-    ws.isAlive = true
-  })
+const server = Bun.serve<WebSocketData>({
+  port: process.env.PORT || 1999,
+  async fetch(request, server) {
+    const auth = await authenticate(request)
 
-  ws.on("close", () => {
-    if (ws.room) {
-      const room = rooms.get(ws.room)
-      room?.delete(ws)
-      room?.forEach((client) => {
-        if (client === ws) return
-        send(client, "room:newdisconnection", ws.id)
+    const upgraded = server.upgrade<WebSocketData>(request, {
+      data: {
+        auth,
+        cursor: null,
+      },
+    })
+
+    if (!upgraded) {
+      return new Response("Upgrade failed", {
+        status: 500,
       })
     }
-  })
+  },
+  websocket: {
+    open(ws) {
+      connections.add(ws)
+    },
+    close(ws) {
+      connections.delete(ws)
 
-  ws.on("message", (rawData) => {
-    const [name, _data] = JSON.parse(rawData.toString())
+      if (!ws.data.room) return
 
-    switch (name as ClientEvent) {
-      case "navigate":
-        {
-          const data = _data as ClientEventDataMap["navigate"] // TODO: zod
+      ws.unsubscribe(ws.data.room)
 
-          if (ws.room) {
-            const room = rooms.get(ws.room)
-            room?.delete(ws)
-            room?.forEach((client) => {
-              if (client === ws) return
-              send(client, "room:newdisconnection", ws.id)
-            })
-          }
+      server.publish(
+        ws.data.room,
+        packServerMessage("room:update", getRoomState(ws.data.room))
+      )
+    },
+    async message(ws, message) {
+      const parsed = unpackClientMessage(message)
 
-          ws.room = data
-
-          if (rooms.has(data)) {
-            const room = rooms.get(data)
-            const roomState = Array.from(room?.values() || []).map((client) => [client.id, client.cursor] as const)
-            send(ws, "room:join", roomState)
-            room?.add(ws)
-            room?.forEach((client) => {
-              if (client === ws) return
-              send(client, "room:newconnection", [ws.id, ws.cursor])
-            })
-          } else {
-            rooms.set(data, new Set([ws]))
-            send(ws, "room:join", [])
-          }
-        }
-        break
-      case "cursor": {
-        const data = _data as ClientEventDataMap["cursor"] // TODO: zod
-
-        ws.cursor = data
-
-        if (!ws.room) {
-          // No-op, client needs to connect first
-          console.log(ws.id, "needs to connect to a room")
-          return
-        }
-
-        const room = rooms.get(ws.room)
-
-        room?.forEach((client) => {
-          if (client === ws) return
-          send(client, "cursor:update", [ws.id, data])
-        })
-        break
+      if (!parsed.success) {
+        console.warn("Received invalid message", parsed.error)
+        return ws.close(1009, parsed.error.message)
       }
-    }
-  })
-})
 
-wss.on("close", () => {
-  clearInterval(pingInterval)
-})
+      switch (parsed.data.event) {
+        case "room:update":
+          // Bail out when trying to join the same room
+          if (ws.data.room === parsed.data.payload.room) return
 
-const app = express()
+          // Leave the previous room
+          if (ws.data.room) {
+            const previous = ws.data.room
+            delete ws.data.room
+            ws.unsubscribe(previous)
+            update(ws)
 
-app.use(helmet())
+            server.publish(
+              previous,
+              packServerMessage("room:update", getRoomState(previous))
+            )
+          }
 
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? ["https://artists-together-web.vercel.app/", "https://artiststogether.online/"]
-        : "*",
-  })
-)
+          // Join the new room
+          ws.data.room = parsed.data.payload.room
+          ws.subscribe(ws.data.room)
+          update(ws)
 
-const server = http.createServer(app)
+          ws.send(packServerMessage("room:update", getRoomState(ws.data.room)))
 
-server.on("upgrade", (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit("connection", ws, request)
-  })
-})
-
-server.listen(process.env.PORT ? Number(process.env.PORT) : 8080, () => {
-  console.log("🚀")
+          server.publish(
+            ws.data.room,
+            packServerMessage("room:update", getRoomState(ws.data.room))
+          )
+          break
+        case "cursor:update":
+          if (ws.data.room && ws.data.auth) {
+            ws.data.cursor = parsed.data.payload
+            update(ws)
+            server.publish(
+              ws.data.room,
+              packServerMessage("cursor:update", {
+                cursor: parsed.data.payload,
+                username: ws.data.auth.user.username,
+              })
+            )
+          }
+          break
+        default:
+          unreachable(parsed.data, "Unreachable event")
+      }
+    },
+  },
 })

@@ -1,0 +1,11 @@
+{
+  "extends": "@artists-together/ts/base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "rootDir": ".",
+  }
+}

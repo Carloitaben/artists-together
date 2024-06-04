@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction } from "discord.js"
-import { parseMentions } from "~/lib/helpers"
+import { parseMentions } from "~/lib/utils"
 import { template } from "~/lib/messages"
 
 export default async function handleSendMessageSubcommand(

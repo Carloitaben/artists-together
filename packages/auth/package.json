@@ -1,0 +1,23 @@
+{
+  "name": "@artists-together/auth",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@artists-together/core": "workspace:*",
+    "@artists-together/db": "workspace:*",
+    "@lucia-auth/adapter-drizzle": "^1.0.7",
+    "@lucia-auth/adapter-sqlite": "^3.0.0",
+    "arctic": "^1.2.1",
+    "lucia": "^3.0.1",
+    "oslo": "^1.1.3"
+  },
+  "devDependencies": {
+    "@artists-together/ts": "workspace:*",
+    "@types/node": "^20.12.10",
+    "dotenv-mono": "^1.3.14",
+    "typescript": "^5.4.5"
+  }
+}

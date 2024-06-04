@@ -9,7 +9,7 @@ import {
   TextInputStyle,
 } from "discord.js"
 import { registerEventHandler } from "~/lib/core"
-import { parseMentions } from "~/lib/helpers"
+import { parseMentions } from "~/lib/utils"
 import { template } from "~/lib/messages"
 
 const MODAL_ID = "admin-send-embed"

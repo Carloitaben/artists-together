@@ -8,11 +8,10 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js"
-import { APPLICATION_ID, CHANNELS } from "~/lib/constants"
+import { CHANNELS } from "@artists-together/core/discord"
 import { registerContextMenuCommand, registerEventHandler } from "~/lib/core"
-import { getTextBasedChannel, parseMentions } from "~/lib/helpers"
 import { template } from "~/lib/messages"
-import { polls } from "./poll/lib/polls"
+import { getTextBasedChannel, parseMentions } from "~/lib/utils"
 
 const MODAL_ID = "admin-edit-message"
 
@@ -66,7 +65,7 @@ const builder = new ContextMenuCommandBuilder()
 registerContextMenuCommand(builder, async (interaction) => {
   if (!interaction.isMessageContextMenuCommand()) return
 
-  if (interaction.targetMessage.author.id !== APPLICATION_ID) {
+  if (interaction.targetMessage.author.id !== process.env.DISCORD_BOT_ID) {
     return interaction.reply({
       content: template.oops("That message isn't mine"),
       ephemeral: true,
@@ -80,20 +79,14 @@ registerContextMenuCommand(builder, async (interaction) => {
     })
   }
 
-  const hasEmbed = interaction.targetMessage.embeds.length === 1
+  const hasEmbed = interaction.targetMessage.embeds?.[0]
 
   const hasMessage = !!interaction.targetMessage.content
 
   const isErrorMessage =
     interaction.targetMessage.channelId === CHANNELS.BOT_SHENANIGANS
 
-  const isPollMessage = Array.from(polls).some(
-    ([_, poll]) =>
-      poll.channelId === interaction.targetMessage.channelId &&
-      poll.messageId === interaction.targetMessage.id,
-  )
-
-  if ((!hasEmbed && !hasMessage) || isPollMessage || isErrorMessage) {
+  if ((!hasEmbed && !hasMessage) || isErrorMessage) {
     return interaction.reply({
       content: template.oops("Can't make changes to that kind of message"),
       ephemeral: true,
@@ -112,7 +105,7 @@ registerContextMenuCommand(builder, async (interaction) => {
       .setValue(interaction.targetMessage.content)
 
     modal.addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput)
     )
   }
 
@@ -125,7 +118,7 @@ registerContextMenuCommand(builder, async (interaction) => {
       .setRequired(false)
       .setLabel("Embed Title")
       .setPlaceholder("Seriously cool embed")
-      .setValue(embed.title || "")
+      .setValue(embed?.title || "")
 
     const colorInput = new TextInputBuilder()
       .setCustomId(INPUT_ID.EMBED_COLOR)
@@ -133,7 +126,7 @@ registerContextMenuCommand(builder, async (interaction) => {
       .setRequired(false)
       .setLabel("Embed color (in hexadecimal)")
       .setPlaceholder("#3924ff")
-      .setValue(embed.hexColor || "")
+      .setValue(embed?.hexColor || "")
 
     const contentInput = new TextInputBuilder()
       .setCustomId(INPUT_ID.EMBED_CONTENT)
@@ -141,12 +134,12 @@ registerContextMenuCommand(builder, async (interaction) => {
       .setRequired(true)
       .setLabel("Embed content (supports Markdown)")
       .setPlaceholder("This is an **awesome** embed!")
-      .setValue(embed.description || "")
+      .setValue(embed?.description || "")
 
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(colorInput),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput)
     )
   }
 
@@ -156,7 +149,7 @@ registerContextMenuCommand(builder, async (interaction) => {
       messageId: interaction.targetMessage.id,
       hasMessage,
       hasEmbed,
-    }),
+    })
   )
 
   return interaction.showModal(modal)
@@ -175,7 +168,7 @@ registerEventHandler("interactionCreate", async (interaction) => {
   }
 
   const { channelId, messageId, hasMessage, hasEmbed } = decode(
-    interaction.customId,
+    interaction.customId
   )
 
   const channel = await getTextBasedChannel(interaction.client, channelId)
@@ -198,11 +191,11 @@ registerEventHandler("interactionCreate", async (interaction) => {
 
   if (hasEmbed) {
     const embedContentInput = interaction.fields.getTextInputValue(
-      INPUT_ID.EMBED_CONTENT,
+      INPUT_ID.EMBED_CONTENT
     )
 
     const embedTitleInput = interaction.fields.getTextInputValue(
-      INPUT_ID.EMBED_TITLE,
+      INPUT_ID.EMBED_TITLE
     )
 
     const embedColorInput =
@@ -211,7 +204,7 @@ registerEventHandler("interactionCreate", async (interaction) => {
     if (embedColorInput && !isValidColor(embedColorInput)) {
       return interaction.reply({
         content: template.oops(
-          `The color code ${embedColorInput} doesn't seem to be valid`,
+          `The color code ${embedColorInput} doesn't seem to be valid`
         ),
         ephemeral: true,
       })
@@ -219,7 +212,7 @@ registerEventHandler("interactionCreate", async (interaction) => {
 
     const content = await parseMentions(
       interaction.guild.roles,
-      embedContentInput,
+      embedContentInput
     )
 
     await message.edit({

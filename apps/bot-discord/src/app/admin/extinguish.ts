@@ -7,10 +7,9 @@ import {
   ComponentType,
   TextChannel,
 } from "discord.js"
-
-import { getTextBasedChannel } from "~/lib/helpers"
-import { CHANNELS } from "~/lib/constants"
+import { CHANNELS } from "@artists-together/core/discord"
 import { template } from "~/lib/messages"
+import { getTextBasedChannel } from "~/lib/utils"
 
 const BUTTON_IDS = {
   DELETE: "confirm",
@@ -41,7 +40,7 @@ export default async function handleExtinguishSubcommand(
 ) {
   const channel = await getTextBasedChannel(
     interaction.client,
-    CHANNELS.ART_EMERGENCIES,
+    CHANNELS.ART_EMERGENCIES
   )
 
   if (channel.type !== ChannelType.GuildText) {

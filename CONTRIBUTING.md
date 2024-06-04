@@ -8,18 +8,21 @@
 ### Prerequisites
 
 ```shell
-node: ">=18"
-pnpm: ">=7"
+node: ">=20"
 ```
 
 ### Setting up your local repository
 
-This repository uses `pnpm` workspaces, so you should **always run `pnpm install` from the top-level project directory**. Running `pnpm install` in the top-level project root will install dependencies for every package in the repo. We also recommend running other `package.json` scripts using the `pnpm --filter` flag instead of changing directories for better ergonomics.
-
 Clone the repository:
 
 ```shell
-git clone https://github.com/Carloitaben/artists-together.git
+git clone https://github.com/carloitaben/artists-together.git
+```
+
+Enable [Corepack](https://nodejs.org/api/corepack.html):
+
+```shell
+corepack enable
 ```
 
 Install workspace dependencies in the root directory:

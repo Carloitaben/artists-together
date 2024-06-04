@@ -1,35 +1,27 @@
 {
-  "name": "bot-discord",
-  "version": "0.1.0",
+  "name": "@artists-together/bot-discord",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch ./src/index.ts",
-    "sync": "tsx ./src/scripts/sync.ts",
-    "seed": "tsx ./src/scripts/seed.ts",
-    "start": "tsx ./src/scripts/sync.ts && tsx ./src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "seed": "bun run src/scripts/seed.ts",
+    "sync": "bun run src/scripts/sync.ts",
+    "start": "bun run src/scripts/sync.ts && bun run src/index.ts"
   },
   "dependencies": {
-    "chrono-node": "^2.7.0",
+    "@artists-together/core": "workspace:*",
+    "@artists-together/db": "workspace:*",
     "dayjs": "^1.11.10",
-    "db": "workspace:*",
-    "discord.js": "^14.13.0",
-    "env": "workspace:*",
-    "fast-glob": "^3.3.1",
-    "nanoid": "^5.0.2",
-    "node-cron": "^3.0.2",
-    "ws": "^8.14.2",
-    "zod": "^3.22.4"
+    "discord.js": "^14.15.2",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
-    "@types/node-cron": "^3.0.10",
-    "@types/ws": "^8.5.8",
-    "tsx": "^3.14.0",
-    "typescript": "^5.2.2",
-    "ws-types": "workspace:*"
-  },
-  "prettier": {
-    "semi": false,
-    "trailingComma": "all"
+    "@artists-together/ts": "workspace:*",
+    "@types/node": "^20.12.10",
+    "@types/node-cron": "^3.0.11",
+    "bun-types": "^1.1.7",
+    "dotenv-mono": "^1.3.14",
+    "typescript": "^5.4.5"
   }
 }

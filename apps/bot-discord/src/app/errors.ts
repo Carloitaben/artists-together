@@ -1,8 +1,8 @@
+import { oneOf } from "@artists-together/core/utils"
+import { CHANNELS, ROLES } from "@artists-together/core/discord"
 import { EmbedBuilder } from "discord.js"
-
 import { registerEventHandler } from "~/lib/core"
-import { getTextBasedChannel, oneOf } from "~/lib/helpers"
-import { CHANNELS, ROLES } from "~/lib/constants"
+import { getTextBasedChannel } from "~/lib/utils"
 
 const MESSAGE_TITLE = [
   "Oopsie!",

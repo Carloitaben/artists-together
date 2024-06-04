@@ -1,96 +1,44 @@
-/* eslint-disable @next/next/no-before-interactive-script-outside-document */
-
-import { ReactNode } from "react"
-import { Metadata } from "next"
-import Script from "next/script"
-
+import font from "next/font/local"
+import type { ReactNode } from "react"
+import { cx } from "cva"
+import Navigation from "~/components/Navigation"
 import "~/styles/index.css"
-
-import { getTheme, makeThemeStyle, Theme } from "~/lib/themes"
-import { oneOf } from "~/lib/utils"
-import { WebSocketProvider } from "~/hooks/ws"
-import NavigationSideBar from "~/components/NavigationSideBar"
-import NavigationBottomBar from "~/components/NavigationBottomBar"
-import Toast from "~/components/Toast"
-import Cursors from "~/components/Cursors/Cursors"
-import Cursor from "~/components/Cursor"
-
-const metadataBase = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : `http://localhost:${process.env.PORT || 3000}`
-
-export const metadata: Metadata = {
-  metadataBase: new URL(metadataBase),
-  title: "Artists Together – Website soon!",
-  description: "An inclusive community for all kinds of artists.",
-  keywords: ["Art", "Artist Community"],
-  twitter: {
-    card: "summary_large_image",
-  },
-}
+import { AuthContext } from "~/services/auth/server"
 
 export const runtime = "edge"
+export const dynamic = "force-dynamic"
+export const fetchCache = "default-no-store"
 
-const themes = [
-  Theme["anamorphic-teal"],
-  Theme["arpeggio-black"],
-  Theme["outsider-violet"],
-  Theme["tuxedo-crimson"],
-]
+const inter = font({
+  src: "../styles/fonts/inter.woff2",
+  variable: "--font-inter",
+  display: "block",
+})
 
-const emojis = [
-  "🐶",
-  "🐵",
-  "🐯",
-  "🐮",
-  "🐴",
-  "🦊",
-  "🐷",
-  "🐨",
-  "🐭",
-  "🐹",
-  "🐰",
-  "🐼",
-  "🐻",
-  "🐸",
-  "🐲",
-  "🦁",
-  "🐱",
-  "🐦",
-  "🐤",
-  "🐔",
-  "🐧",
-]
+const fraunces = font({
+  src: "../styles/fonts/fraunces.woff2",
+  variable: "--font-fraunces",
+  display: "block",
+})
 
 type Props = {
   children: ReactNode
 }
 
-export default async function Layout({ children }: Props) {
-  const theme = getTheme(oneOf(themes))
-  const style = makeThemeStyle(theme)
-  const emoji = oneOf(emojis)
-
+export default function Layout({ children }: Props) {
   return (
     <html
       lang="en"
-      className="h-full bg-theme-900 text-gunpla-white-50"
-      style={style}
-      suppressHydrationWarning
+      className={cx(
+        "bg-arpeggio-black-900 text-gunpla-white-50 h-full min-h-full",
+        inter.variable,
+        fraunces.variable,
+      )}
     >
-      <body className="grid min-h-full pb-14 selection:bg-theme-300 selection:text-theme-900 sm:pb-0 sm:pl-16">
-        <Toast>
-          <WebSocketProvider>
-            <NavigationSideBar />
-            {children}
-            <Cursors emoji={emoji} />
-            <Cursor />
-            <NavigationBottomBar />
-          </WebSocketProvider>
-        </Toast>
-        <Script id="tailwindcss-noscript" strategy="beforeInteractive">
-          {`(function(){typeof document !== "undefined" && document.documentElement.classList.add("js");}())`}
-        </Script>
+      <body className="h-full">
+        <AuthContext>
+          <Navigation>{children}</Navigation>
+        </AuthContext>
       </body>
     </html>
   )

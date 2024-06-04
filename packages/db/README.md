@@ -1,14 +1,6 @@
 # Artists Together Database
 
-The source code of the database for all Artist Together apps.
-
-## Stack
-
-- `drizzle-kit`
-- `drizzle-orm`
-- `drizzle-zod`
-- `libsql`
-- `zod`
+The source code of the database service for all Artist Together apps.
 
 ## Development
 
@@ -18,7 +10,13 @@ Install workspace dependencies in the root directory:
 pnpm install
 ```
 
-Run the `push` script to bootstrap the database:
+Start the `libsql` server:
+
+```shell
+pnpm --filter db dev
+```
+
+Run the `push` script on a separate terminal to bootstrap the database:
 
 ```shell
 pnpm --filter db push

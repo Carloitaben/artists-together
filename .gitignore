@@ -2,5 +2,7 @@
 node_modules
 *.log
 *.local
+*.tsbuildinfo
 .local.db
 .env
+.vercel

@@ -1,0 +1,21 @@
+{
+  "name": "@artists-together/core",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@artists-together/db": "workspace:*",
+    "@discordjs/core": "^1.2.0",
+    "@discordjs/rest": "^2.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@artists-together/ts": "workspace:*",
+    "@types/node": "^20.12.10",
+    "typescript": "^5.4.5"
+  }
+}

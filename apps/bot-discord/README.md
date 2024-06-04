@@ -2,15 +2,16 @@
 
 The source code of the Discord integration of Pal (Programmable Artistic Life-form), the assistant bot for the Artist Together community.
 
-## Stack
-
-- `discord.js`
-- `node`
-
 ## Development
 
 > **Important**
-> Before proceeding, make sure to set up the `db` package following the instructions in its [`README.md` file](../../packages/db/).
+> Before proceeding, make sure to [install `bun`](https://bun.sh/).
+
+> **Important**
+> Before proceeding, make sure to [set up the `db` package](../../packages/db/README.md).
+
+> **Important**
+> Before proceeding, make sure to [set up the `auth` package](../../packages/auth/README.md).
 
 Install workspace dependencies in the root directory:
 
@@ -18,27 +19,8 @@ Install workspace dependencies in the root directory:
 pnpm install
 ```
 
-It is highly recommended that you set up your own test bot and server for local development if you plan on working extensively with the codebase, since automated testing of Discord bots is very challenging and not worth the effort.
-
-Start by [creating a Discord server](https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server) and then follow the instructions provided [here](https://discordjs.guide/preparations/setting-up-a-bot-application.html) to create a bot application and add it to your server.
-
-Create a `.env` file in the repository root directory with the contents of the `.env.example` file and put in values for every variable prefixed with `DISCORD`:
+Run the `dev` command to start the server in development mode:
 
 ```shell
-touch .env
+pnpm --parallel --filter db --filter bot-discord dev
 ```
-
-Next run the `sync` command in order to configure your server to have the latest slash-commands definitions:
-
-```shell
-pnpm --filter bot-discord sync
-```
-
-You can now run the `dev` command to start the bot in development mode:
-
-```shell
-pnpm --filter bot-discord dev
-```
-
-> **Note**
-> You will need to create channels and roles for several of the features. The error messages in your terminal will tell you which ones to create.
